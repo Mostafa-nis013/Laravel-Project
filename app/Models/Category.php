@@ -2,30 +2,51 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'description', 'color', 'created_by'];
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'image',
+        'parent_id',
+        'is_active',
+        'sort_order',
+    ];
 
-    public function articles()
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    // Relationships
+    public function products()
     {
-        return $this->hasMany(Article::class);
+        return $this->hasMany(Product::class);
     }
 
-    public function creator()
+    public function parent()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    public static function generateSlug(string $name): string
+    public function children()
     {
-        $slug  = Str::slug($name);
-        $count = static::where('slug', 'like', "{$slug}%")->count();
-        return $count ? "{$slug}-{$count}" : $slug;
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeRoots($query)
+    {
+        return $query->whereNull('parent_id');
     }
 }

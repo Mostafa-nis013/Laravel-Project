@@ -2,46 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
+use App\Models\Product;
 use App\Models\Category;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Order;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $user  = Auth::user();
-        $stats = [];
+        $stats = [
+            'total_products'   => Product::count(),
+            'active_products'  => Product::active()->count(),
+            'low_stock'        => Product::where('stock', '<=', 5)->where('stock', '>', 0)->count(),
+            'out_of_stock'     => Product::where('stock', 0)->count(),
+            'total_categories' => Category::count(),
+            'total_orders'     => Order::count(),
+            'pending_orders'   => Order::where('status', Order::STATUS_PENDING)->count(),
+            'total_revenue'    => Order::where('status', Order::STATUS_DELIVERED)->sum('total'),
+        ];
 
-        if ($user->hasPermission('view_dashboard')) {
-            $articleQuery = Article::query();
+        $recentOrders = Order::with('items')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
 
-            // Editors only see their own articles in stats
-            if ($user->isEditor()) {
-                $articleQuery->byAuthor($user->id);
-            }
+        $topProducts = Product::withCount('orderItems')
+            ->orderBy('order_items_count', 'desc')
+            ->limit(5)
+            ->get();
 
-            $stats = [
-                'total_articles'     => $articleQuery->count(),
-                'published_articles' => (clone $articleQuery)->where('status', 'published')->count(),
-                'draft_articles'     => (clone $articleQuery)->where('status', 'draft')->count(),
-                'total_categories'   => Category::count(),
-                'total_users'        => $user->hasRole(['super_admin', 'admin']) ? User::count() : null,
-                'active_users'       => $user->hasRole(['super_admin', 'admin']) ? User::where('is_active', true)->count() : null,
-            ];
-
-            $recentArticles = (clone $articleQuery)
-                ->with(['author', 'category'])
-                ->latest()
-                ->limit(5)
-                ->get();
-
-            $recentUsers = $user->hasRole(['super_admin', 'admin'])
-                ? User::latest()->limit(5)->get()
-                : collect();
-        }
-
-        return view('dashboard.index', compact('stats', 'recentArticles', 'recentUsers'));
+        return view('admin.dashboard', compact('stats', 'recentOrders', 'topProducts'));
     }
 }

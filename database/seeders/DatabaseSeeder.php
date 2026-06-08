@@ -2,82 +2,96 @@
 
 namespace Database\Seeders;
 
-use App\Models\Article;
-use App\Models\Category;
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Order;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // ── Users ──────────────────────────────────────────────────────────────
-        $superAdmin = User::create([
-            'name'     => 'Super Admin',
-            'email'    => 'superadmin@demo.com',
-            'password' => Hash::make('password'),
-            'role'     => 'super_admin',
-        ]);
-
-        $admin = User::create([
-            'name'     => 'Admin User',
-            'email'    => 'admin@demo.com',
-            'password' => Hash::make('password'),
-            'role'     => 'admin',
-        ]);
-
-        $editor = User::create([
-            'name'     => 'Editor User',
-            'email'    => 'editor@demo.com',
-            'password' => Hash::make('password'),
-            'role'     => 'editor',
-        ]);
-
-        $user = User::create([
-            'name'     => 'Regular User',
-            'email'    => 'user@demo.com',
-            'password' => Hash::make('password'),
-            'role'     => 'user',
-        ]);
-
-        // ── Categories ─────────────────────────────────────────────────────────
+        // Categories
         $categories = [
-            ['name' => 'Technology',  'color' => '#6366f1', 'description' => 'Tech news and tutorials'],
-            ['name' => 'Design',      'color' => '#ec4899', 'description' => 'UI/UX and visual design'],
-            ['name' => 'Business',    'color' => '#f59e0b', 'description' => 'Business strategy and growth'],
-            ['name' => 'Science',     'color' => '#10b981', 'description' => 'Scientific discoveries'],
+            ['name' => 'Electronics',   'description' => 'Gadgets and electronic devices'],
+            ['name' => 'Clothing',      'description' => 'Fashion and apparel'],
+            ['name' => 'Home & Garden', 'description' => 'Home decor and garden supplies'],
+            ['name' => 'Sports',        'description' => 'Sports and outdoor equipment'],
+            ['name' => 'Books',         'description' => 'Books and educational materials'],
         ];
 
         foreach ($categories as $cat) {
             Category::create([
-                ...$cat,
-                'slug'       => \Illuminate\Support\Str::slug($cat['name']),
-                'created_by' => $admin->id,
+                'name'        => $cat['name'],
+                'slug'        => Str::slug($cat['name']),
+                'description' => $cat['description'],
+                'is_active'   => true,
+                'sort_order'  => 0,
             ]);
         }
 
-        // ── Articles ───────────────────────────────────────────────────────────
-        $sampleArticles = [
-            ['title' => 'Getting Started with Laravel 11', 'status' => 'published', 'author_id' => $editor->id, 'category_id' => 1],
-            ['title' => 'The Future of AI in Web Development', 'status' => 'published', 'author_id' => $admin->id, 'category_id' => 1],
-            ['title' => 'Modern CSS Techniques for 2025', 'status' => 'draft', 'author_id' => $editor->id, 'category_id' => 2],
-            ['title' => 'Building Scalable SaaS Products', 'status' => 'published', 'author_id' => $admin->id, 'category_id' => 3],
-            ['title' => 'Deep Dive: Quantum Computing Basics', 'status' => 'archived', 'author_id' => $superAdmin->id, 'category_id' => 4],
-            ['title' => 'UI Design Trends to Watch', 'status' => 'draft', 'author_id' => $editor->id, 'category_id' => 2],
+        // Products
+        $products = [
+            ['name' => 'Wireless Headphones',  'price' => 99.99,  'sale_price' => 79.99, 'stock' => 50,  'sku' => 'ELEC-001', 'category' => 'Electronics'],
+            ['name' => 'Smartphone Stand',     'price' => 24.99,  'sale_price' => null,  'stock' => 100, 'sku' => 'ELEC-002', 'category' => 'Electronics'],
+            ['name' => 'USB-C Hub',            'price' => 49.99,  'sale_price' => null,  'stock' => 75,  'sku' => 'ELEC-003', 'category' => 'Electronics'],
+            ['name' => 'Classic T-Shirt',      'price' => 19.99,  'sale_price' => null,  'stock' => 200, 'sku' => 'CLO-001',  'category' => 'Clothing'],
+            ['name' => 'Denim Jacket',         'price' => 89.99,  'sale_price' => 69.99, 'stock' => 30,  'sku' => 'CLO-002',  'category' => 'Clothing'],
+            ['name' => 'Running Shoes',        'price' => 129.99, 'sale_price' => null,  'stock' => 40,  'sku' => 'CLO-003',  'category' => 'Clothing'],
+            ['name' => 'Ceramic Plant Pot',    'price' => 34.99,  'sale_price' => null,  'stock' => 60,  'sku' => 'HOME-001', 'category' => 'Home & Garden'],
+            ['name' => 'Garden Tool Set',      'price' => 59.99,  'sale_price' => 44.99, 'stock' => 25,  'sku' => 'HOME-002', 'category' => 'Home & Garden'],
+            ['name' => 'Yoga Mat',             'price' => 39.99,  'sale_price' => null,  'stock' => 80,  'sku' => 'SPT-001',  'category' => 'Sports'],
+            ['name' => 'Water Bottle',         'price' => 22.99,  'sale_price' => null,  'stock' => 150, 'sku' => 'SPT-002',  'category' => 'Sports'],
+            ['name' => 'Laravel Up & Running', 'price' => 44.99,  'sale_price' => null,  'stock' => 0,   'sku' => 'BOOK-001', 'category' => 'Books'],
+            ['name' => 'Clean Code',           'price' => 38.99,  'sale_price' => 29.99, 'stock' => 35,  'sku' => 'BOOK-002', 'category' => 'Books'],
         ];
 
-        foreach ($sampleArticles as $art) {
-            Article::create([
-                'title'        => $art['title'],
-                'slug'         => \Illuminate\Support\Str::slug($art['title']),
-                'excerpt'      => 'A compelling summary of ' . strtolower($art['title']) . '.',
-                'content'      => '<p>This is the full content of the article. It covers everything you need to know about ' . strtolower($art['title']) . '.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>',
-                'status'       => $art['status'],
-                'author_id'    => $art['author_id'],
-                'category_id'  => $art['category_id'],
-                'views'        => rand(50, 800),
-                'published_at' => $art['status'] === 'published' ? now()->subDays(rand(1, 30)) : null,
+        foreach ($products as $prod) {
+            $category = Category::where('name', $prod['category'])->first();
+            Product::create([
+                'name'        => $prod['name'],
+                'slug'        => Str::slug($prod['name']),
+                'description' => "This is the {$prod['name']}. A high-quality product perfect for everyday use.",
+                'price'       => $prod['price'],
+                'sale_price'  => $prod['sale_price'],
+                'stock'       => $prod['stock'],
+                'sku'         => $prod['sku'],
+                'category_id' => $category->id,
+                'is_active'   => true,
+                'is_featured' => in_array($prod['sku'], ['ELEC-001', 'CLO-002', 'SPT-001']),
+            ]);
+        }
+
+        // Sample Orders
+        $statuses = ['pending', 'processing', 'shipped', 'delivered'];
+        for ($i = 1; $i <= 8; $i++) {
+            $order = Order::create([
+                'customer_name'    => "Customer {$i}",
+                'customer_email'   => "customer{$i}@example.com",
+                'customer_phone'   => '+1 555-000-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'shipping_address' => "{$i} Main Street",
+                'shipping_city'    => 'New York',
+                'shipping_state'   => 'NY',
+                'shipping_zip'     => '10001',
+                'shipping_country' => 'US',
+                'subtotal'         => 99.99 * $i,
+                'shipping_fee'     => $i > 2 ? 0 : 9.99,
+                'tax'              => round(99.99 * $i * 0.08, 2),
+                'total'            => round(99.99 * $i * 1.08 + ($i > 2 ? 0 : 9.99), 2),
+                'status'           => $statuses[($i - 1) % 4],
+                'payment_method'   => 'credit_card',
+                'payment_status'   => 'paid',
+            ]);
+
+            $product = Product::inRandomOrder()->first();
+            $order->items()->create([
+                'product_id'   => $product->id,
+                'product_name' => $product->name,
+                'product_sku'  => $product->sku,
+                'quantity'     => $i,
+                'unit_price'   => $product->price,
+                'subtotal'     => $product->price * $i,
             ]);
         }
     }
