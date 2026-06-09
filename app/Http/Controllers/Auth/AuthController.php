@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Models\ActivityLog;
 
 class AuthController extends Controller
 {
@@ -47,6 +48,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        ActivityLog::log('login', Auth::user()->name . ' signed in.');
 
         return $this->redirectAfterLogin(Auth::user());
     }
@@ -92,6 +94,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        if (auth()->check()) { ActivityLog::log('logout', auth()->user()->name . ' signed out.'); }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -7,6 +7,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ActivityLog;
 
 class ProductController extends Controller
 {
@@ -88,6 +89,7 @@ class ProductController extends Controller
         }
 
         $product = Product::create($validated);
+        ActivityLog::log('created', "Created product \"{$product->name}\".", $product);
 
         return redirect()
             ->route('products.index')
@@ -143,6 +145,7 @@ class ProductController extends Controller
         }
 
         $product->update($validated);
+        ActivityLog::log('updated', "Updated product \"{$product->name}\".", $product);
 
         return redirect()
             ->route('products.index')
@@ -156,6 +159,7 @@ class ProductController extends Controller
     {
         $name = $product->name;
         $product->delete();
+        ActivityLog::log('deleted', "Deleted product \"{$name}\".");
 
         return redirect()
             ->route('products.index')

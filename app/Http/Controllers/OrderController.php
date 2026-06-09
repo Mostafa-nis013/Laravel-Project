@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Models\ActivityLog;
 
 class OrderController extends Controller
 {
@@ -108,6 +109,8 @@ class OrderController extends Controller
             Product::find($item['product_id'])->decrement('stock', $item['quantity']);
         }
 
+        ActivityLog::log('created', "Created order {$order->order_number} for {$order->customer_name}.", $order);
+
         return redirect()
             ->route('orders.show', $order)
             ->with('success', "Order {$order->order_number} created successfully.");
@@ -173,6 +176,7 @@ class OrderController extends Controller
         ]);
 
         $order->update(['status' => $request->status]);
+        ActivityLog::log('status', "Updated order {$order->order_number} status to " . Order::STATUSES[$request->status] . ".", $order);
 
         return redirect()
             ->back()

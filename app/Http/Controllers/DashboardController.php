@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\ActivityLog;
 
 class DashboardController extends Controller
 {
@@ -25,14 +26,40 @@ class DashboardController extends Controller
 
         $recentOrders = Order::with('items')
             ->orderBy('created_at', 'desc')
-            ->limit(5)
+            ->limit(6)
             ->get();
 
         $topProducts = Product::withCount('orderItems')
             ->orderBy('order_items_count', 'desc')
-            ->limit(5)
+            ->limit(6)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'recentOrders', 'topProducts'));
+        // 14-day revenue sparkline
+        $rawRevenue = Order::whereIn('status', ['delivered', 'shipped', 'processing'])
+            ->where('created_at', '>=', now()->subDays(13))
+            ->selectRaw('DATE(created_at) as date, SUM(total) as revenue')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $sparkRevenue = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $sparkRevenue[] = [
+                'date'    => now()->subDays($i)->format('M d'),
+                'revenue' => (float) ($rawRevenue[$date]->revenue ?? 0),
+            ];
+        }
+
+        // Recent activity feed
+        $recentActivity = ActivityLog::with('user')
+            ->orderBy('created_at', 'desc')
+            ->limit(8)
+            ->get();
+
+        return view('admin.dashboard', compact(
+            'stats', 'recentOrders', 'topProducts', 'sparkRevenue', 'recentActivity'
+        ));
     }
 }
