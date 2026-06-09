@@ -6,13 +6,94 @@ use Illuminate\Database\Seeder;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Order;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Categories
+        // ── Roles ─────────────────────────────────────────────────────────────
+        $roles = [
+            [
+                'name'        => Role::ADMIN,
+                'label'       => 'Administrator',
+                'description' => 'Full access to everything including user management.',
+            ],
+            [
+                'name'        => Role::EDITOR,
+                'label'       => 'Editor',
+                'description' => 'Can manage products, categories, and orders.',
+            ],
+            [
+                'name'        => Role::MODERATOR,
+                'label'       => 'Moderator',
+                'description' => 'Can view and manage orders and products.',
+            ],
+            [
+                'name'        => Role::USER,
+                'label'       => 'User',
+                'description' => 'Standard customer account with storefront access only.',
+            ],
+        ];
+
+        foreach ($roles as $r) {
+            Role::firstOrCreate(['name' => $r['name']], $r);
+        }
+
+        // ── Users ─────────────────────────────────────────────────────────────
+        $adminRole     = Role::where('name', Role::ADMIN)->first();
+        $editorRole    = Role::where('name', Role::EDITOR)->first();
+        $moderatorRole = Role::where('name', Role::MODERATOR)->first();
+        $userRole      = Role::where('name', Role::USER)->first();
+
+        // Super admin
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@velour.com'],
+            [
+                'name'      => 'Admin User',
+                'password'  => Hash::make('password'),
+                'is_active' => true,
+            ]
+        );
+        $admin->assignRole($adminRole);
+
+        // Editor
+        $editor = User::firstOrCreate(
+            ['email' => 'editor@velour.com'],
+            [
+                'name'      => 'Editor User',
+                'password'  => Hash::make('password'),
+                'is_active' => true,
+            ]
+        );
+        $editor->assignRole($editorRole);
+
+        // Moderator
+        $moderator = User::firstOrCreate(
+            ['email' => 'moderator@velour.com'],
+            [
+                'name'      => 'Moderator User',
+                'password'  => Hash::make('password'),
+                'is_active' => true,
+            ]
+        );
+        $moderator->assignRole($moderatorRole);
+
+        // Regular user
+        $user = User::firstOrCreate(
+            ['email' => 'user@velour.com'],
+            [
+                'name'      => 'Regular User',
+                'password'  => Hash::make('password'),
+                'is_active' => true,
+            ]
+        );
+        $user->assignRole($userRole);
+
+        // ── Categories ────────────────────────────────────────────────────────
         $categories = [
             ['name' => 'Electronics',   'description' => 'Gadgets and electronic devices'],
             ['name' => 'Clothing',      'description' => 'Fashion and apparel'],
@@ -22,16 +103,18 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($categories as $cat) {
-            Category::create([
-                'name'        => $cat['name'],
-                'slug'        => Str::slug($cat['name']),
-                'description' => $cat['description'],
-                'is_active'   => true,
-                'sort_order'  => 0,
-            ]);
+            Category::firstOrCreate(
+                ['name' => $cat['name']],
+                [
+                    'slug'        => Str::slug($cat['name']),
+                    'description' => $cat['description'],
+                    'is_active'   => true,
+                    'sort_order'  => 0,
+                ]
+            );
         }
 
-        // Products
+        // ── Products ──────────────────────────────────────────────────────────
         $products = [
             ['name' => 'Wireless Headphones',  'price' => 99.99,  'sale_price' => 79.99, 'stock' => 50,  'sku' => 'ELEC-001', 'category' => 'Electronics'],
             ['name' => 'Smartphone Stand',     'price' => 24.99,  'sale_price' => null,  'stock' => 100, 'sku' => 'ELEC-002', 'category' => 'Electronics'],
@@ -49,21 +132,23 @@ class DatabaseSeeder extends Seeder
 
         foreach ($products as $prod) {
             $category = Category::where('name', $prod['category'])->first();
-            Product::create([
-                'name'        => $prod['name'],
-                'slug'        => Str::slug($prod['name']),
-                'description' => "This is the {$prod['name']}. A high-quality product perfect for everyday use.",
-                'price'       => $prod['price'],
-                'sale_price'  => $prod['sale_price'],
-                'stock'       => $prod['stock'],
-                'sku'         => $prod['sku'],
-                'category_id' => $category->id,
-                'is_active'   => true,
-                'is_featured' => in_array($prod['sku'], ['ELEC-001', 'CLO-002', 'SPT-001']),
-            ]);
+            Product::firstOrCreate(
+                ['sku' => $prod['sku']],
+                [
+                    'name'        => $prod['name'],
+                    'slug'        => Str::slug($prod['name']),
+                    'description' => "This is the {$prod['name']}. A high-quality product.",
+                    'price'       => $prod['price'],
+                    'sale_price'  => $prod['sale_price'],
+                    'stock'       => $prod['stock'],
+                    'category_id' => $category->id,
+                    'is_active'   => true,
+                    'is_featured' => in_array($prod['sku'], ['ELEC-001', 'CLO-002', 'SPT-001']),
+                ]
+            );
         }
 
-        // Sample Orders
+        // ── Sample Orders ─────────────────────────────────────────────────────
         $statuses = ['pending', 'processing', 'shipped', 'delivered'];
         for ($i = 1; $i <= 8; $i++) {
             $order = Order::create([

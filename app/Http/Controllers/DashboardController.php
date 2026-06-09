@@ -19,6 +19,8 @@ class DashboardController extends Controller
             'total_orders'     => Order::count(),
             'pending_orders'   => Order::where('status', Order::STATUS_PENDING)->count(),
             'total_revenue'    => Order::where('status', Order::STATUS_DELIVERED)->sum('total'),
+            'total_users'      => \App\Models\User::count(),
+            'active_users'     => \App\Models\User::where('is_active', true)->count(),
         ];
 
         $recentOrders = Order::with('items')

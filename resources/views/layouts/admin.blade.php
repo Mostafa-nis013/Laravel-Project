@@ -410,8 +410,36 @@
         <a href="{{ route('orders.index') }}" class="nav-item {{ request()->routeIs('orders.*') ? 'active' : '' }}">
             <span class="nav-icon">◷</span> Orders
         </a>
+
+        @if(auth()->user()->isAdmin())
+        <div class="nav-section" style="margin-top:16px">Access</div>
+        <a href="{{ route('users.index') }}" class="nav-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
+            <span class="nav-icon">◎</span> Users
+        </a>
+        @endif
     </nav>
-    <div class="sidebar-footer">Velour eCommerce v1.0</div>
+
+    <div class="sidebar-footer">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:var(--accent);font-weight:600;flex-shrink:0">
+                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+            </div>
+            <div style="min-width:0">
+                <div style="font-size:0.82rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ auth()->user()->name }}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">
+                    @foreach(auth()->user()->roles as $role)
+                        <span style="font-size:0.65rem;background:rgba(232,200,122,0.12);color:var(--accent);padding:1px 6px;border-radius:10px">{{ $role->label }}</span>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" style="width:100%;background:none;border:1px solid var(--border);border-radius:var(--radius);padding:7px 12px;color:var(--muted);font-size:0.8rem;cursor:pointer;text-align:left;font-family:inherit;transition:all 0.15s" onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+                ⎋ Sign out
+            </button>
+        </form>
+    </div>
 </aside>
 
 <!-- Main -->

@@ -9,6 +9,20 @@
         <h2>Good morning ☀</h2>
         <p>Here's what's happening in your store today.</p>
     </div>
+    {{-- Current user's role badge --}}
+    <div style="display:flex;align-items:center;gap:8px">
+        @foreach(auth()->user()->roles as $role)
+            @php
+                $cls = match($role->name) {
+                    'admin'     => 'badge-yellow',
+                    'editor'    => 'badge-blue',
+                    'moderator' => 'badge-purple',
+                    default     => 'badge-green',
+                };
+            @endphp
+            <span class="badge {{ $cls }}" style="padding:6px 14px;font-size:0.82rem">{{ $role->label }}</span>
+        @endforeach
+    </div>
 </div>
 
 {{-- Stats Grid --}}
@@ -38,6 +52,13 @@
         <div class="stat-value" style="color:var(--accent)">${{ number_format($stats['total_revenue'], 2) }}</div>
         <div class="stat-sub">From delivered orders</div>
     </div>
+    @if(auth()->user()->isAdmin())
+    <div class="stat-card">
+        <div class="stat-label">Users</div>
+        <div class="stat-value">{{ number_format($stats['total_users']) }}</div>
+        <div class="stat-sub">{{ $stats['active_users'] }} active</div>
+    </div>
+    @endif
 </div>
 
 <div class="grid-2" style="gap:24px">
