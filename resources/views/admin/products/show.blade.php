@@ -2,6 +2,11 @@
 
 @section('title', $product->name)
 @section('topbar-title', 'Products / Detail')
+@section('breadcrumb')
+    <span style="color:var(--muted)">Catalog</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb-current">Products / Detail</span>
+@endsection
 
 @section('content')
 <div class="page-header">

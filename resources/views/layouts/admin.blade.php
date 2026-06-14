@@ -634,7 +634,20 @@
             @endif
         </nav>
 
-        <div class="topbar-right">
+        <!-- Global search -->
+        <div style="position:relative;margin-left:auto" id="global-search-wrap">
+            <div style="display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 10px;gap:7px;transition:border-color 0.15s" id="global-search-box">
+                <span style="color:var(--muted);font-size:0.85rem;flex-shrink:0">🔍</span>
+                <input type="text" id="global-search-input" placeholder="Search products, orders…"
+                    style="background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;width:180px"
+                    autocomplete="off">
+            </div>
+            <div id="global-search-results" style="display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:300px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 12px 40px rgba(0,0,0,0.5);z-index:300;overflow:hidden">
+                <div id="search-results-inner" style="max-height:360px;overflow-y:auto"></div>
+            </div>
+        </div>
+
+        <div class="topbar-right" style="margin-left:12px">
             <!-- Notification bell -->
             <div style="position:relative">
                 <button class="notif-btn" id="notif-btn" aria-label="Notifications">
@@ -763,6 +776,106 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.getElementById(target)?.classList.add('active');
     });
 });
+
+// ── Global search ─────────────────────────────────────────────────────────────
+(function() {
+    const input   = document.getElementById('global-search-input');
+    const box     = document.getElementById('global-search-box');
+    const results = document.getElementById('global-search-results');
+    const inner   = document.getElementById('search-results-inner');
+    if (!input) return;
+
+    const typeColors = {
+        product:  { icon: '◈', bg: 'rgba(232,200,122,0.1)',  color: '#e8c87a' },
+        order:    { icon: '◷', bg: 'rgba(82,130,224,0.1)',   color: '#7aabf0' },
+        user:     { icon: '◎', bg: 'rgba(150,100,220,0.1)',  color: '#c090f0' },
+        category: { icon: '◉', bg: 'rgba(82,192,122,0.1)',   color: '#52c07a' },
+    };
+
+    let debounce;
+
+    input.addEventListener('focus', () => {
+        box.style.borderColor = 'var(--accent)';
+        if (inner.innerHTML) results.style.display = 'block';
+    });
+
+    input.addEventListener('input', () => {
+        clearTimeout(debounce);
+        const q = input.value.trim();
+        if (q.length < 2) { results.style.display = 'none'; return; }
+
+        debounce = setTimeout(async () => {
+            inner.innerHTML = '<div style="padding:14px 16px;color:var(--muted);font-size:0.82rem">Searching…</div>';
+            results.style.display = 'block';
+
+            try {
+                const res  = await fetch('/admin/search?q=' + encodeURIComponent(q), {
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '' }
+                });
+                const data = await res.json();
+
+                if (!data.results.length) {
+                    inner.innerHTML = '<div style="padding:20px 16px;color:var(--muted);font-size:0.82rem;text-align:center">No results for "<strong style=\'color:var(--text)\'>' + q + '</strong>"</div>';
+                    return;
+                }
+
+                // Group by type
+                const groups = {};
+                data.results.forEach(r => { (groups[r.type] = groups[r.type] || []).push(r); });
+
+                let html = '';
+                Object.entries(groups).forEach(([type, items]) => {
+                    const tc = typeColors[type] || { bg: 'var(--surface2)', color: 'var(--muted)' };
+                    const label = type.charAt(0).toUpperCase() + type.slice(1) + 's';
+                    html += '<div style="padding:8px 14px 4px;font-size:0.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:700;border-top:1px solid var(--border)">' + label + '</div>';
+                    items.forEach(item => {
+                        html += '<a href="' + item.url + '" style="display:flex;align-items:center;gap:12px;padding:10px 14px;text-decoration:none;transition:background 0.1s;border-bottom:1px solid rgba(42,42,50,0.4)" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">'+
+                            '<div style="width:32px;height:32px;border-radius:8px;background:' + tc.bg + ';color:' + tc.color + ';display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0">' + tc.icon + '</div>'+
+                            '<div style="flex:1;min-width:0">'+
+                                '<div style="font-size:0.85rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + item.label + '</div>'+
+                                '<div style="font-size:0.73rem;color:var(--muted);margin-top:1px">' + item.sublabel + '</div>'+
+                            '</div>'+
+                            '<div style="text-align:right;flex-shrink:0">'+
+                                '<div style="font-size:0.78rem;color:var(--accent);font-weight:600">' + (item.meta || '') + '</div>'+
+                                (item.badge ? '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">' + item.badge + '</div>' : '')+
+                            '</div>'+
+                        '</a>';
+                    });
+                });
+
+                inner.innerHTML = html;
+            } catch(e) {
+                inner.innerHTML = '<div style="padding:14px 16px;color:var(--danger);font-size:0.82rem">Search error. Please try again.</div>';
+            }
+        }, 280);
+    });
+
+    // Close on outside click
+    document.addEventListener('click', e => {
+        if (!document.getElementById('global-search-wrap')?.contains(e.target)) {
+            results.style.display = 'none';
+            box.style.borderColor = 'var(--border)';
+        }
+    });
+
+    // Keyboard: Escape closes, Enter follows first result
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { results.style.display = 'none'; input.blur(); }
+        if (e.key === 'Enter') {
+            const first = inner.querySelector('a');
+            if (first) { window.location = first.href; }
+        }
+    });
+
+    // Cmd/Ctrl+K to focus search
+    document.addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            input.focus();
+            input.select();
+        }
+    });
+})();
 </script>
 @stack('scripts')
 </body>

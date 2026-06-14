@@ -91,7 +91,7 @@
             @if(auth()->user()->isAdmin() || auth()->user()->hasRole(['editor','moderator']))
                 <a href="{{ route('dashboard') }}" class="btn btn-primary">Admin Dashboard</a>
             @else
-                <a href="{{ route('home') }}" class="btn btn-primary">Go to Home</a>
+                <a href="{{ route('shop.index') }}" class="btn btn-primary">Go to Shop</a>
             @endif
         @else
             <a href="{{ route('login') }}" class="btn btn-primary">Sign In</a>

@@ -2,6 +2,11 @@
 
 @section('title', $order->order_number)
 @section('topbar-title', 'Orders / Detail')
+@section('breadcrumb')
+    <span style="color:var(--muted)">Sales</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb-current">Orders / Detail</span>
+@endsection
 
 @section('content')
 <div class="page-header">

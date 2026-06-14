@@ -87,7 +87,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('home')->with('success', 'Welcome to Velour, ' . $user->name . '!');
+        return redirect()->route('shop.index')->with('success', 'Welcome to Velour, ' . $user->name . '!');
     }
 
     // ── Logout ───────────────────────────────────────────────────────────────
@@ -109,16 +109,12 @@ class AuthController extends Controller
      */
     private function redirectAfterLogin(User $user): \Illuminate\Http\RedirectResponse
     {
-        if ($user->isAdmin()) {
+        // Admins, editors, moderators → admin dashboard
+        if ($user->hasRole([Role::ADMIN, Role::EDITOR, Role::MODERATOR])) {
             return redirect()->intended(route('dashboard'));
         }
 
-        // Editors and moderators also get admin access
-        if ($user->hasRole([Role::EDITOR, Role::MODERATOR])) {
-            return redirect()->intended(route('dashboard'));
-        }
-
-        // Regular users land on the storefront home (or a placeholder)
-        return redirect()->intended(route('home'));
+        // Regular users → storefront
+        return redirect()->intended(route('shop.index'));
     }
 }

@@ -2,6 +2,11 @@
 
 @section('title', 'Edit Product')
 @section('topbar-title', 'Products / Edit')
+@section('breadcrumb')
+    <span style="color:var(--muted)">Catalog</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb-current">Products / Edit</span>
+@endsection
 
 @section('content')
 <div class="page-header">

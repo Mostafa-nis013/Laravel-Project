@@ -25,7 +25,7 @@ class RedirectIfAuthenticated
                     return redirect()->route('dashboard');
                 }
 
-                return redirect()->route('home');
+                return redirect()->route('shop.index');
             }
         }
 

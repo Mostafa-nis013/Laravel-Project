@@ -433,7 +433,7 @@
             <div class="demo-row" onclick="fill('user@velour.com')">
                 <span class="demo-role-badge" style="background:rgba(82,192,122,0.12);color:#7ad4a0">User</span>
                 <span class="demo-email">user@velour.com</span>
-                <span class="demo-hint">Storefront only</span>
+                <span class="demo-hint">Shop access only</span>
             </div>
         </div>
     </div>

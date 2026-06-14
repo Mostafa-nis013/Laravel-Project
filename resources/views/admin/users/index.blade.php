@@ -2,6 +2,11 @@
 
 @section('title', 'Users')
 @section('topbar-title', 'Users & Roles')
+@section('breadcrumb')
+    <span style="color:var(--muted)">People</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb-current">Users</span>
+@endsection
 
 @section('content')
 <div class="page-header">

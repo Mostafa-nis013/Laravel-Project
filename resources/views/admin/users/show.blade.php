@@ -2,6 +2,11 @@
 
 @section('title', $user->name)
 @section('topbar-title', 'Users / Detail')
+@section('breadcrumb')
+    <span style="color:var(--muted)">People</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb-current">Users / Detail</span>
+@endsection
 
 @section('content')
 <div class="page-header">
